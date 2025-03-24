@@ -7,6 +7,11 @@ function AssignmentOne() {
   const incrementCounter = () => setCount(count + 1);
   const decrementCounter = () => setCount(count - 1);
 
+  // my added code para di bumaba sa 0 ung count
+  if (count < 0) {
+    setCount(0);
+  }
+
   return (
     <>
       <div className="counter-container">
