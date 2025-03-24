@@ -107,7 +107,7 @@ function AssignmentFour() {
     setDisplayAddress(
       `You live in   ${
         otherAddress || ""
-      }, ${barangayName}, ${cityName}, ${provinceName}, ${regionName}, ${zipCode}, Philippines. 
+      }, Brgy. ${barangayName}, ${cityName}, ${provinceName}, ${regionName}, ${zipCode}, Philippines. 
       `
     );
   };
