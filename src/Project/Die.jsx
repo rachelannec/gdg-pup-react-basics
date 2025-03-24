@@ -1,6 +1,7 @@
 export default function Die(props) {
     const styles = {
-        backgroundColor: props.isClicked ? "blue" : "gray"
+        // changed blue to something red-ish
+        backgroundColor: props.isClicked ? "#bc5448" : "gray"
     }
 
     return (
