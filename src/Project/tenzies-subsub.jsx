@@ -1,19 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./TenziesProject.css";
 import Die from "./Die";
-import Stopwatch from "./timer";
+import Stopwatch from "./stopwatch";
 
 export default function TenziesProject() {
-    // Game state
     const [dice, setDice] = useState(generateAllNewDice);
     const [gameWon, setGameWon] = useState(false);
     
-    // Player management
-    const [players, setPlayers] = useState([]);
-    const [currentPlayer, setCurrentPlayer] = useState("");
-    const [times, setTimes] = useState([]);
-    const startTimeRef = useRef(null);
-    const [activePlayerIndex, setActivePlayerIndex] = useState(0);
+    const [elapsedTime, setElapsedTime] = useState(0);
+    const [resetTimer, setResetTimer] = useState(false);
+
 
     // new dice
     function generateAllNewDice() {
@@ -34,8 +30,7 @@ export default function TenziesProject() {
             );
         } else {
             resetGame();
-            // Move to next player or back to first player
-            setActivePlayerIndex(prev => (prev + 1) % players.length);
+           
         }
     }
 
@@ -48,62 +43,29 @@ export default function TenziesProject() {
         );
     }
 
-    // Check for win condition
+    // check win
     useEffect(() => {
         const allDiceHeld = dice.every(die => die.isClicked);
         const allSameValue = dice.every(die => die.value === dice[0].value);
         
-        if (allDiceHeld && allSameValue && players.length > 0) {
+        if (allDiceHeld && allSameValue) {
             setGameWon(true);
-            if (startTimeRef.current) {
-                const elapsedTime = Math.floor((Date.now() - startTimeRef.current) / 1000);
-                updatePlayerTime(players[activePlayerIndex].name, elapsedTime);
-            }
+
         }
-    }, [dice, players, activePlayerIndex]);
+    }, [dice]);
 
-    // Add new player
-    function addPlayer() {
-        const trimmedName = currentPlayer.trim();
-        if (!trimmedName || players.some(p => p.name === trimmedName)) return;
 
-        setPlayers(prevPlayers => [
-            ...prevPlayers, 
-            { name: trimmedName, time: null }
-        ]);
-        setCurrentPlayer("");
-        if (players.length === 0) {
-            startTimeRef.current = Date.now();
-        }
-    }
 
-    // Update player time
-    function updatePlayerTime(playerName, elapsedTime) {
-        setTimes(prevTimes => [
-            ...prevTimes,
-            { name: playerName, time: elapsedTime }
-        ]);
-    }
+
 
     // Reset game state
     function resetGame() {
         setDice(generateAllNewDice());
         setGameWon(false);
-        startTimeRef.current = Date.now();
+        setElapsedTime(0);
+        setResetTimer(prev => !prev); // trigger to reset
     }
 
-    // Determine winner
-    function determineWinner() {
-        const completedTimes = times.filter(player => player.time !== null);
-        if (completedTimes.length === 0) return null;
-
-        const minTime = Math.min(...completedTimes.map(p => p.time));
-        return completedTimes.filter(player => player.time === minTime);
-    }
-
-    // Memoized derived values
-    const winners = determineWinner();
-    const currentPlayerName = players[activePlayerIndex]?.name || "";
     
     const diceElements = dice.map(die => (
         <Die
@@ -111,7 +73,7 @@ export default function TenziesProject() {
             value={die.value}
             isClicked={die.isClicked}
             hold={() => holdDice(die.id)}
-            disabled={players.length === 0 || gameWon}
+            disabled={gameWon}
         />
     ));
 
@@ -119,7 +81,7 @@ export default function TenziesProject() {
         <div className="project-container">
             <main className="game-container">
                 <h1 className="title">
-                    {gameWon ? "🎉 Congrats, You Won! 🎉" : "Tenzies"}
+                    {gameWon ? <span>"🎉 Congrats, <br />You Won! 🎉"</span> : "Tenzies"}
                 </h1>
                 
                 <p className="instructions">
@@ -127,56 +89,14 @@ export default function TenziesProject() {
                     at its current value between rolls.
                 </p>
 
-                <div className="player-management">
-                    <input
-                        type="text"
-                        placeholder="Enter player name"
-                        value={currentPlayer}
-                        onChange={(e) => setCurrentPlayer(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && addPlayer()}
-                        disabled={gameWon}
+
+                <div className="stopwatch-container">
+                    <Stopwatch
+                        updateTime = {(time) =>setElapsedTime(time)}
+                        stopTimer= {gameWon}
+                        resetTimer={resetTimer}
                     />
-                    <button 
-                        onClick={addPlayer} 
-                        disabled={!currentPlayer.trim() || gameWon}
-                    >
-                        Add Player
-                    </button>
                 </div>
-
-                <div className="players-list">
-                    <h3>Players {players.length > 0 ? `(${players.length})` : ''}:</h3>
-                    {players.length === 0 ? (
-                        <p className="no-players">No players added yet</p>
-                    ) : (
-                        <ul>
-                            {players.map((player, index) => (
-                                <li 
-                                    key={player.name}
-                                    className={`
-                                        ${winners?.some(w => w.name === player.name) ? "winner" : ""}
-                                        ${index === activePlayerIndex ? "active-player" : ""}
-                                    `}
-                                    aria-current={
-                                        winners?.some(w => w.name === player.name) ? "true" : undefined
-                                    }
-                                >
-                                    {player.name} - {player.time ? `${player.time}s` : "Playing..."}
-                                    {index === activePlayerIndex && !gameWon && " (Current)"}
-                                    {winners?.some(w => w.name === player.name) && (
-                                        <span className="visually-hidden"> (BEST TIME)</span>
-                                    )}
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </div>
-
-                {players.length > 0 && (
-                    <div className="current-player">
-                        Current Turn: <strong>{currentPlayerName}</strong>
-                    </div>
-                )}
 
                 <div className="dice-container">
                     {diceElements}
@@ -185,20 +105,10 @@ export default function TenziesProject() {
                 <button 
                     className="roll-dice-btn" 
                     onClick={rollDice}
-                    disabled={players.length === 0}
                 >
-                    {gameWon ? "Next Player" : "Roll"}
+                    {gameWon ? "Restart Game" : "Roll"}
                 </button>
 
-                {gameWon && winners && (
-                    <div className="winner-announcement">
-                        <h2> 
-                            {winners.map(winner => (
-                                <span key={winner.name}> {winner.name} ({winner.time}s)</span>
-                            ))}!
-                        </h2>
-                    </div>
-                )}
             </main>
         </div>
     );

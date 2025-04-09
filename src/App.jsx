@@ -5,7 +5,7 @@ import AssignmentThree from "./Assignments/AssignmentThree/AssignmentThree";
 import AssignmentFour from "./Assignments/AssignmentFour/AssignmentFour";
 // import TenziesProject from "./Project/TenziesProject";
 // import TenziesProject from "./Project/tenzies-sub"; // soft change for this one
-import TenziesProject from "./Project/tenzies-subsub"; // ai-ed
+import TenziesProject from "./Project/tenzies-subsub"; 
 import "./App.css";
 
 function App() {
